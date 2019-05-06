@@ -5,8 +5,9 @@ import 'package:flutter/material.dart';
 
 class CustomKbBtn extends StatefulWidget {
   String text;
+  double size;  //字体大小
 
-  CustomKbBtn({Key key, this.text, this.callback}) : super(key: key);
+  CustomKbBtn({Key key, this.text,this.size = 20.0, this.callback}) : super(key: key);
   final callback;
 
   @override
@@ -39,7 +40,7 @@ class ButtonState extends State<CustomKbBtn> {
           borderSide: new BorderSide(color: Color(0x10333333)),
           child: new Text(
             widget.text,
-            style: new TextStyle(color: Color(0xff333333), fontSize: 20.0),
+            style: new TextStyle(color: Color(0xff333333), fontSize: widget.size),
           ),
           onPressed: back,
         ));

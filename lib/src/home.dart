@@ -14,8 +14,6 @@ class BottomnavigationWigetState extends State<BottomnavigationWidget> {
   int _currentIndex = 0;
   List<Widget> list = List();
 
-
-
   @override
   void initState() {
     list.add(Detail());
@@ -30,6 +28,19 @@ class BottomnavigationWigetState extends State<BottomnavigationWidget> {
     // TODO: implement build
     return Scaffold(
       body: list[_currentIndex],
+      floatingActionButton: FloatingActionButton(
+          onPressed: (){
+            Navigator.push(context, MaterialPageRoute(
+                builder: (context) => Record()
+            ));
+          },
+        child: Icon(
+          Icons.add,
+          color: Colors.white70,
+        ),
+
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,  //融合
       bottomNavigationBar: BottomNavigationBar(
         items: [
           BottomNavigationBarItem(
@@ -52,14 +63,13 @@ class BottomnavigationWigetState extends State<BottomnavigationWidget> {
               ))),
           BottomNavigationBarItem(
               icon: Icon(
-                Icons.add,
+                Icons.assessment,
                 color: _bottonNavitionColor,
               ),
               title: (Text(
-                '记账',
+                '发现',
                 style: TextStyle(color: _bottonNavitionColor),
-              )),
-          ),
+              ))),
           BottomNavigationBarItem(
               icon: Icon(
                 Icons.account_circle,
@@ -74,13 +84,6 @@ class BottomnavigationWigetState extends State<BottomnavigationWidget> {
         onTap: (int index) {
           setState(() {
             _currentIndex = index;
-            //仅第三个直接跳转
-            if (index == 2) {
-              Navigator.push(context, MaterialPageRoute(
-                  builder: (context) => Record()
-              ));
-            }
-
           });
         },
         type: BottomNavigationBarType.fixed,

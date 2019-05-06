@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:record_app/src/keyBoard/custom_keyboard_button.dart';
 import 'package:record_app/src/keyBoard/pay_password.dart';
+import 'package:dio/dio.dart';
+import '../pages/record.dart';
 
 
 /// 自定义密码 键盘
@@ -8,7 +10,6 @@ class MyKeyboard extends StatefulWidget{
 
   @override
   State<StatefulWidget> createState() {
-
     return MyKeyboardState();
   }
 
@@ -17,12 +18,17 @@ class MyKeyboard extends StatefulWidget{
 class MyKeyboardState extends State<MyKeyboard>{
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final GlobalKey<ButtonState> buttonStatekey = GlobalKey<ButtonState>();
+  String dateStr = "今天";
+  String dataStr2 = "";
+  double size = 20.0;
   /// 定义 确定 按钮 接口  暴露给调用方
   String moneyStr = "";
   double money = 0;
+  String confirmStr = "完成";
+
 
   ///回调函数
-  void _onKeyDown(KeyEvent data){
+  void _onKeyDown(BuildContext cont,KeyEvent data){
 
     if(data.key == "date"){
       showDatePicker(
@@ -32,15 +38,16 @@ class MyKeyboardState extends State<MyKeyboard>{
         lastDate: new DateTime.now().add(new Duration(days: 30)),       // 加 30 天
       ).then((DateTime val) {
         print(val);   // 2018-07-12 00:00:00.000
-        buttonStatekey.currentState.widget.text = val.year.toString();
         setState(() {
+          dataStr2 = val.year.toString() + "-" + val.month.toString() + "-" + val.day.toString();
+          dateStr =  val.year.toString() + "/" + val.month.toString() + "/" + val.day.toString();
+          size = 13.0;
         });
       }).catchError((err) {
         print(err);
       });
       return;
     }
-
 
     if (moneyStr.contains("+") && !moneyStr.endsWith("+")){
 
@@ -49,7 +56,11 @@ class MyKeyboardState extends State<MyKeyboard>{
         double a = double.parse(split[0]);
         double b = double.parse(split[1]);
         money = a + b;
-        moneyStr = money.toString() + "+";
+        if (data.key == "=") {
+          moneyStr = money.toString();
+        }else{
+          moneyStr = money.toString() + "-";
+        }
       }
     }
 
@@ -60,8 +71,23 @@ class MyKeyboardState extends State<MyKeyboard>{
         double a = double.parse(split[0]);
         double b = double.parse(split[1]);
         money = a - b;
-        moneyStr = money.toString() + "-";
+        if (data.key == "=") {
+          moneyStr = money.toString();
+        }else{
+          moneyStr = money.toString() + "-";
+        }
       }
+    }
+
+    //=符号逻辑判读
+    if ((moneyStr.contains("+") || moneyStr.contains("-")) && (!moneyStr.endsWith("+") || !moneyStr.endsWith("-"))) {
+      confirmStr = "=";
+      setState(() {});
+    }
+    //如果点击了=号之后就变成完成
+    if (data.key == "=") {
+      confirmStr = "完成";
+      setState(() {});
     }
 
     if ( data.key != "=" && !data.isDelete() && !data.isCommit()) {
@@ -74,85 +100,106 @@ class MyKeyboardState extends State<MyKeyboard>{
       moneyStr += data.key;
     }
 
-
-
     if (data.isDelete()) {
       if (moneyStr.length > 0) {
         moneyStr = moneyStr.substring(0, moneyStr.length - 1);
-
       }
     } else if (data.isCommit()) {
-//      onAffirmButton();
+      money = double.parse(moneyStr);
+      saveRecord(cont).then((val){
+        print(val);
+      });
+
     }
     setState(() {});
   }
 
-  void onCommitChange() {
-    _onKeyDown(new KeyEvent("commit"));
+  //保存记录
+  Future saveRecord(BuildContext context) async{
+    try {
+
+      Map param = new Map();
+      param['UserId'] = "1111";
+      param['Amount'] = money;
+      param['Date'] = dataStr2;
+      param['Directory'] = RecordProvider.of(context).id;
+
+      Dio dio = new Dio();
+      dio.options.baseUrl = "http://118.24.61.197:8081";
+      var post = dio.post("/record/saveRecord",data: param);
+      print(post);
+    } catch (e) {
+      print(e);
+    }
+
+  }
+
+  void onCommitChange(BuildContext cont,String confirmStr) {
+    _onKeyDown(cont,new KeyEvent(confirmStr));
   }
 
   void onOneChange(BuildContext cont) {
-    _onKeyDown(new KeyEvent("1"));
+    _onKeyDown(cont,new KeyEvent("1"));
   }
 
   void onTwoChange(BuildContext cont) {
-    _onKeyDown(new KeyEvent("2"));
+    _onKeyDown(cont,new KeyEvent("2"));
   }
 
   void onThreeChange(BuildContext cont) {
-    _onKeyDown(new KeyEvent("3"));
+    _onKeyDown(cont,new KeyEvent("3"));
   }
 
   void onFourChange(BuildContext cont) {
-    _onKeyDown(new KeyEvent("4"));
+    _onKeyDown(cont,new KeyEvent("4"));
   }
 
   void onFiveChange(BuildContext cont) {
-    _onKeyDown(new KeyEvent("5"));
+    _onKeyDown(cont,new KeyEvent("5"));
   }
 
   void onSixChange(BuildContext cont) {
-    _onKeyDown(new KeyEvent("6"));
+    _onKeyDown(cont,new KeyEvent("6"));
   }
 
   void onSevenChange(BuildContext cont) {
-    _onKeyDown(new KeyEvent("7"));
+    _onKeyDown(cont,new KeyEvent("7"));
   }
 
   void onEightChange(BuildContext cont) {
-    _onKeyDown(new KeyEvent("8"));
+    _onKeyDown(cont,new KeyEvent("8"));
   }
 
   void onNineChange(BuildContext cont) {
-    _onKeyDown(new KeyEvent("9"));
+    _onKeyDown(cont,new KeyEvent("9"));
   }
 
   void onZeroChange(BuildContext cont) {
-    _onKeyDown(new KeyEvent("0"));
+    _onKeyDown(cont,new KeyEvent("0"));
   }
 
   void onDotChange(BuildContext cont) {
-    _onKeyDown(new KeyEvent("."));
+    _onKeyDown(cont,new KeyEvent("."));
   }
 
 
   /// 点击删除
-  void onDeleteChange() {
-    _onKeyDown(new KeyEvent("del"));
+  void onDeleteChange(BuildContext cont) {
+    _onKeyDown(cont,new KeyEvent("del"));
   }
 
   /// 点击今天
-  void onDateChange() {
-    _onKeyDown(new KeyEvent("date"));
+  void onDateChange(BuildContext cont) {
+    _onKeyDown(cont,new KeyEvent("date"));
   }
 
   /// 点击加号
-  void onAddChange() {
-    _onKeyDown(new KeyEvent("+"));
+  void onAddChange(BuildContext cont) {
+    _onKeyDown(cont,new KeyEvent("+"));
   }
   /// 点击减号
-  void onMinusChange() {
-    _onKeyDown(new KeyEvent("-"));
+  void onMinusChange(BuildContext cont) {
+    _onKeyDown(cont,new KeyEvent("-"));
   }
 
   @override
@@ -219,7 +266,9 @@ class MyKeyboardState extends State<MyKeyboard>{
                       text: '3', callback: (val) => onThreeChange(context)),
                   CustomKbBtn(
                     key: buttonStatekey,
-                      text: '今天', callback: (val) => onDateChange()),
+                      text: dateStr,
+                      size: size,
+                      callback: (val) => onDateChange(context)),
                 ],
               ),
               ///  第二行
@@ -232,7 +281,7 @@ class MyKeyboardState extends State<MyKeyboard>{
                   CustomKbBtn(
                       text: '6', callback: (val) => onSixChange(context)),
                   CustomKbBtn(
-                      text: '+', callback: (val) => onAddChange()),
+                      text: '+', callback: (val) => onAddChange(context)),
                 ],
               ),
               ///  第三行
@@ -245,7 +294,7 @@ class MyKeyboardState extends State<MyKeyboard>{
                   CustomKbBtn(
                       text: '9', callback: (val) => onNineChange(context)),
                   CustomKbBtn(
-                      text: '-', callback: (val) => onMinusChange()),
+                      text: '-', callback: (val) => onMinusChange(context)),
                 ],
               ),
               ///  第四行
@@ -255,8 +304,8 @@ class MyKeyboardState extends State<MyKeyboard>{
                       text: '.', callback: (val) => onDotChange(context)),
                   CustomKbBtn(
                       text: '0', callback: (val) => onZeroChange(context)),
-                  CustomKbBtn(text: '删除', callback: (val) => onDeleteChange()),
-                  CustomKbBtn(text: '确定', callback: (val) => onCommitChange()),
+                  CustomKbBtn(text: '删除', callback: (val) => onDeleteChange(context)),
+                  CustomKbBtn(text: confirmStr, callback: (val) => onCommitChange(context,confirmStr)),
                 ],
               ),
 
