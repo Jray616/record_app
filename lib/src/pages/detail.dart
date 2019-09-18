@@ -74,6 +74,7 @@ class Detail extends StatelessWidget{
       body: recordList()
     );
 
+
   }
 
 }
